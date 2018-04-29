@@ -2,6 +2,8 @@ package actors;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,8 +11,10 @@ import java.util.List;
 public class TemperatureActor extends AbstractActor {
 
     private List<Long> temps;
+    private JedisPool pool = new JedisPool(new JedisPoolConfig(), "localhost");
 
     public TemperatureActor(){
+
         temps = new ArrayList<Long>();
     }
 
