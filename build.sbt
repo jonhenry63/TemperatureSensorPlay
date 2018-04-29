@@ -12,6 +12,7 @@ scalaVersion := "2.12.4"
 crossScalaVersions := Seq("2.11.12", "2.12.4")
 
 libraryDependencies += guice
+libraryDependencies += "redis.clients" % "jedis" % "1.5.2"
 
 // Test Database
 libraryDependencies += "com.h2database" % "h2" % "1.4.196"
@@ -19,7 +20,6 @@ libraryDependencies += "com.h2database" % "h2" % "1.4.196"
 // Testing libraries for dealing with CompletionStage...
 libraryDependencies += "org.assertj" % "assertj-core" % "3.6.2" % Test
 libraryDependencies += "org.awaitility" % "awaitility" % "2.0.0" % Test
-libraryDependencies += "redis.clients" % "jedis" % "1.5.2"
 
 
 // Make verbose tests
