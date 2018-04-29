@@ -5,6 +5,7 @@ build
 /.idea_modules
 /.classpath
 project/target
+project/build.properties
 /.settings
 /.gradle
 /RUNNING_PID
