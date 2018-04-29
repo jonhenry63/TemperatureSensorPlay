@@ -1,0 +1,6 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+GET     /temps/latest               controllers.TemperatureController.readTemperature
+POST    /temps/:id                  controllers.TemperatureController.writeTemperature(id: Long)
