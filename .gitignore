@@ -9,3 +9,10 @@ project/build.properties
 /.settings
 /.gradle
 /RUNNING_PID
+scripts/test-sbt
+scripts/script-helper
+project/plugins.sbt
+gradle/wrapper/gradle-wrapper.properties
+gradle/wrapper/gradle-wrapper.jar
+scripts/test-gradle
+TemperatureSensorPlay.iml
