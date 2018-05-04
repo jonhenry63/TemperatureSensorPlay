@@ -6,6 +6,7 @@ import akka.actor.ActorSystem;
 import akka.actor.Scheduler;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
+import com.fasterxml.jackson.databind.JsonNode;
 import models.TemperatureReading;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -16,6 +17,7 @@ import scala.concurrent.Future;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -55,8 +57,10 @@ public class TemperatureController extends Controller {
      * will be called when the application receives a <code>GET</code> request with
      * a path of <code>/message</code>.
      */
-    public Result writeTemperature(Long temp){
-        tempActor.tell(new TemperatureActor.WriteTemperature(1, temp.floatValue(), temp + 1), tempActor);
+    public Result writeTemperature(){
+        JsonNode requestBody = request().body().asJson();
+        long timeNow = Instant.now().toEpochMilli();
+        tempActor.tell(new TemperatureActor.WriteTemperature(requestBody.path("sensorId").asLong(),(float)requestBody.path("reading").asDouble(), timeNow), tempActor);
         return ok("ok i did it");
     }
 
