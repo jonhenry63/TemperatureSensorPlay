@@ -21,7 +21,7 @@ public class TemperatureActor extends AbstractActor {
     }
 
     public static Props props() {
-        return Props.create(TemperatureActor.class, () -> new TemperatureActor());
+        return Props.create(TemperatureActor.class, TemperatureActor::new);
     }
 
 
