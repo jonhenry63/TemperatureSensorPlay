@@ -6,13 +6,6 @@ import jedis.RedisClient;
 import models.TemperatureReading;
 import redis.clients.jedis.Tuple;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 public class TemperatureActor extends AbstractActor {
 
     private RedisClient client = new RedisClient();
