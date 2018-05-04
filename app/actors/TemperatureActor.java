@@ -2,10 +2,7 @@ package actors;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
-import redis.clients.jedis.*;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
+import jedis.RedisClient;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -16,7 +13,7 @@ import java.util.List;
 public class TemperatureActor extends AbstractActor {
 
     private List<Long> temps;
-    private JedisPool pool = new JedisPool(new JedisPoolConfig(), "localhost");
+    private RedisClient client = new RedisClient();
 
     public TemperatureActor(){
 
@@ -35,18 +32,14 @@ public class TemperatureActor extends AbstractActor {
                     temps.add(tmp);
                 })
                 .match(RecieveTemperature.class, p -> {
-                    Jedis jedis = null;
-                    try {
-                        jedis = pool.getResource();
-                        jedis.zadd(p.getSensorID().toString(),p.getTimeStampLong(), p.getTemp().toString());
-
-                    } finally {
-                        if (jedis != null) {
-                            jedis.close();
-                        }
-                    }
-                    pool.close();
+                        client.zadd(p.getSensorID().toString(),p.getTimeStampLong(), p.getTemp().toString());
                         })
+                .match(GetTemperature.class, p -> {
+                    LocalDateTime tempTime = LocalDateTime.now();
+                    Long tempEpochTime = tempTime.atZone(ZoneId.systemDefault()).toEpochSecond();
+                    client.zrangebyscore(p.sensorID.toString(), tempEpochTime-60, tempEpochTime);
+
+                })
                 .matchEquals("latest", p -> {
                     switch (temps.size()) {
                         case 0:
@@ -96,6 +89,14 @@ public class TemperatureActor extends AbstractActor {
 
         public Long getSensorID() {
             return sensorID;
+        }
+    }
+
+    public static final class GetTemperature{
+        final Long sensorID;
+
+        public GetTemperature(Long sensorID) {
+            this.sensorID = sensorID;
         }
     }
 }
