@@ -26,19 +26,19 @@ public class TemperatureActor extends AbstractActor {
             .build();
     }
 
-private TemperatureReading getLatestTemperature(long sensorId) {
-    String sensorIdString = String.valueOf(sensorId);
-    int latestReadingIndex = client.zcard(sensorIdString).intValue() - 1;
+    private TemperatureReading getLatestTemperature(long sensorId) {
+        String sensorIdString = String.valueOf(sensorId);
+        int latestReadingIndex = client.zcard(sensorIdString).intValue() - 1;
 
-    Tuple latestReading = client
-        .zrangeWithScores(sensorIdString, latestReadingIndex, latestReadingIndex)
-        .iterator().next();
+        Tuple latestReading = client
+            .zrangeWithScores(sensorIdString, latestReadingIndex, latestReadingIndex)
+            .iterator().next();
 
-    long epochMillis = (long) latestReading.getScore();
-    float tempReading = Float.parseFloat(latestReading.getElement());
+        long epochMillis = (long) latestReading.getScore();
+        float tempReading = Float.parseFloat(latestReading.getElement());
 
-    return new TemperatureReading(sensorId, tempReading, epochMillis);
-}
+        return new TemperatureReading(sensorId, tempReading, epochMillis);
+    }
 
     public static final class WriteTemperature {
         long sensorId;
