@@ -3,6 +3,7 @@ package jedis;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.Tuple;
 
 import java.util.Set;
 
@@ -27,10 +28,10 @@ public class RedisClient {
         }
     }
 
-    public Set<String> zrangebyscore(String key, double min, double max) {
+    public Set<Tuple> zrangeByScoreWithScores(String key, double min, double max) {
         Jedis jedis = claimResource();
         try {
-            return jedis.zrangeByScore(key, min, max);
+            return jedis.zrangeByScoreWithScores(key, min, max);
         } finally {
             returnResource(jedis);
         }
