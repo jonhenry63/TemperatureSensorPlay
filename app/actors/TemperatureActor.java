@@ -3,22 +3,21 @@ package actors;
 import akka.actor.AbstractActor;
 import akka.actor.Props;
 import jedis.RedisClient;
+import models.TemperatureReading;
+import redis.clients.jedis.Tuple;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class TemperatureActor extends AbstractActor {
 
-    private List<Long> temps;
     private RedisClient client = new RedisClient();
 
-    public TemperatureActor(){
-
-        temps = new ArrayList<Long>();
-    }
+    private TemperatureActor(){ }
 
     public static Props props() {
         return Props.create(TemperatureActor.class, TemperatureActor::new);
@@ -27,74 +26,52 @@ public class TemperatureActor extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-            .match(Long.class, tmp ->{
-                temps.add(tmp);
-            })
-            .match(RecieveTemperature.class, p -> {
-                    client.zadd(p.getSensorID().toString(),p.getTimeStampLong(), p.getTemp().toString());
-                    })
-            .match(GetTemperature.class, p -> {
-                LocalDateTime tempTime = LocalDateTime.now();
-                Long tempEpochTime = tempTime.atZone(ZoneId.systemDefault()).toEpochSecond();
-                client.zrangebyscore(p.sensorID.toString(), tempEpochTime-60, tempEpochTime);
-            })
-            .matchEquals("latest", p -> {
-                switch (temps.size()) {
-                    case 0:
-                        getSender().tell(-1L,getSelf());
-                        break;
-                    default:
-                        getSender().tell(temps.get(temps.size()-1),getSelf());
-                        break;
-                }
-            })
+            .match(WriteTemperature.class, p -> client.zadd(String.valueOf(p.sensorId),
+                p.epochMillis,
+                String.valueOf(p.temperature)))
+            .match(ReadTemperature.class, p -> getSender().tell(getLatestTemperature(p.sensorId), getSelf()))
             .build();
     }
 
-    public static final class RecieveTemperature{
-        final Float temp;
-        final Long sensorID;
-        final LocalDateTime timeStamp;
+    private TemperatureReading getLatestTemperature(long sensorId) {
+        LocalDateTime tempTime = LocalDateTime.now().minusDays(1);
+        Long tempEpochTime = tempTime.atZone(ZoneId.systemDefault()).toEpochSecond();
+        Set<Tuple> readingsWithScores = client
+            .zrangeByScoreWithScores(String.valueOf(sensorId), tempEpochTime, tempEpochTime);
 
-        public RecieveTemperature(Float temp, Long sensorID, LocalDateTime timeStamp) {
-            this.temp = temp;
-            this.sensorID = sensorID;
-            this.timeStamp = timeStamp;
-        }
+        ArrayList<Tuple> tupleList = new ArrayList<>(readingsWithScores);
 
-        public RecieveTemperature(Float temp, Long sensorID, String timeStamp) {
-            this.temp = temp;
-            this.sensorID = sensorID;
+        Map<String, Double> tempScoreMap = tupleList.stream().collect(Collectors.toMap(Tuple::getElement, Tuple::getScore));
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-ddTHH:mm:ssZ");
-            LocalDateTime dateTime = LocalDateTime.parse(timeStamp, formatter);
-            this.timeStamp = dateTime;
-        }
+        Map.Entry<String, Double> latestTemperature = tempScoreMap
+            .entrySet()
+            .stream()
+            .max((entry1, entry2) -> entry1.getValue() > entry2.getValue() ? 1 : -1)
+            .get();
 
-        public Float getTemp() {
-            return temp;
-        }
+        long epochMillis = latestTemperature.getValue().longValue();
+        float tempReading = Float.parseFloat(latestTemperature.getKey());
 
-        public LocalDateTime getTimeStamp() {
-            return timeStamp;
-        }
+        return new TemperatureReading(sensorId, tempReading, epochMillis);
+    }
 
-        public Long getTimeStampLong(){
-            Long epoch = timeStamp.atZone(ZoneId.systemDefault()).toEpochSecond();
-            return epoch;
-        }
+    public static final class WriteTemperature {
+        long sensorId;
+        float temperature;
+        long epochMillis;
 
-
-        public Long getSensorID() {
-            return sensorID;
+        public WriteTemperature(long sensorId, float temperature, long epochMillis) {
+            this.sensorId = sensorId;
+            this.temperature = temperature;
+            this.epochMillis = epochMillis;
         }
     }
 
-    public static final class GetTemperature{
-        final Long sensorID;
+    public static final class ReadTemperature {
+        long sensorId;
 
-        public GetTemperature(Long sensorID) {
-            this.sensorID = sensorID;
+        public ReadTemperature(long sensorId) {
+            this.sensorId = sensorId;
         }
     }
 }
