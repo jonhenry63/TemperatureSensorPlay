@@ -6,6 +6,7 @@ import akka.actor.ActorSystem;
 import akka.actor.Scheduler;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
+import models.TemperatureReading;
 import play.mvc.Controller;
 import play.mvc.Result;
 import scala.concurrent.Await;
@@ -55,15 +56,15 @@ public class TemperatureController extends Controller {
      * a path of <code>/message</code>.
      */
     public Result writeTemperature(Long temp){
-        tempActor.tell(temp,tempActor);
+        tempActor.tell(new TemperatureActor.WriteTemperature(1, temp.floatValue(), temp + 1), tempActor);
         return ok("ok i did it");
     }
 
     public Result readTemperature() {
-        Future<Object> future = Patterns.ask(tempActor, "latest", timeout);
+        Future<Object> future = Patterns.ask(tempActor, new TemperatureActor.ReadTemperature(1), timeout);
         try {
-            Long result = (Long) Await.result(future, timeout.duration());
-            return ok(views.html.temps.render(result.toString(), null));
+            TemperatureReading result = (TemperatureReading) Await.result(future, timeout.duration());
+            return ok(views.html.temps.render(String.valueOf(result.getReading()), null));
         } catch (Exception e) {
             e.printStackTrace();
             return status(422, views.html.temps.render("error", null));
