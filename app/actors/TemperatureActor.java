@@ -33,27 +33,19 @@ public class TemperatureActor extends AbstractActor {
             .build();
     }
 
-    private TemperatureReading getLatestTemperature(long sensorId) {
-        LocalDateTime tempTime = LocalDateTime.now().minusDays(1);
-        Long tempEpochTime = tempTime.atZone(ZoneId.systemDefault()).toEpochSecond();
-        Set<Tuple> readingsWithScores = client
-            .zrangeByScoreWithScores(String.valueOf(sensorId), tempEpochTime, tempEpochTime);
+private TemperatureReading getLatestTemperature(long sensorId) {
+    String sensorIdString = String.valueOf(sensorId);
+    int latestReadingIndex = client.zcard(sensorIdString).intValue() - 1;
 
-        ArrayList<Tuple> tupleList = new ArrayList<>(readingsWithScores);
+    Tuple latestReading = client
+        .zrangeWithScores(sensorIdString, latestReadingIndex, latestReadingIndex)
+        .iterator().next();
 
-        Map<String, Double> tempScoreMap = tupleList.stream().collect(Collectors.toMap(Tuple::getElement, Tuple::getScore));
+    long epochMillis = (long) latestReading.getScore();
+    float tempReading = Float.parseFloat(latestReading.getElement());
 
-        Map.Entry<String, Double> latestTemperature = tempScoreMap
-            .entrySet()
-            .stream()
-            .max((entry1, entry2) -> entry1.getValue() > entry2.getValue() ? 1 : -1)
-            .get();
-
-        long epochMillis = latestTemperature.getValue().longValue();
-        float tempReading = Float.parseFloat(latestTemperature.getKey());
-
-        return new TemperatureReading(sensorId, tempReading, epochMillis);
-    }
+    return new TemperatureReading(sensorId, tempReading, epochMillis);
+}
 
     public static final class WriteTemperature {
         long sensorId;

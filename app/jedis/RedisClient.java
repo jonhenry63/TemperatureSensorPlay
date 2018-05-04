@@ -19,6 +19,15 @@ public class RedisClient {
         }
     }
 
+    public Long zcard(String key) {
+        Jedis jedis = claimResource();
+        try {
+            return jedis.zcard(key);
+        } finally {
+            returnResource(jedis);
+        }
+    }
+
     public Long zadd(String key, double score, String member) {
         Jedis jedis = claimResource();
         try {
@@ -28,19 +37,10 @@ public class RedisClient {
         }
     }
 
-    public Set<Tuple> zrangeByScoreWithScores(String key, double min, double max) {
+    public Set<Tuple> zrangeWithScores(String key, int start, int end) {
         Jedis jedis = claimResource();
         try {
-            return jedis.zrangeByScoreWithScores(key, min, max);
-        } finally {
-            returnResource(jedis);
-        }
-    }
-
-    public Set<String> zrange(String key, int start, int end) {
-        Jedis jedis = claimResource();
-        try {
-            return jedis.zrange(key, start, end);
+            return jedis.zrangeWithScores(key, start, end);
         } finally {
             returnResource(jedis);
         }
