@@ -24,33 +24,31 @@ public class TemperatureActor extends AbstractActor {
         return Props.create(TemperatureActor.class, TemperatureActor::new);
     }
 
-
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(Long.class, tmp ->{
-                    temps.add(tmp);
-                })
-                .match(RecieveTemperature.class, p -> {
-                        client.zadd(p.getSensorID().toString(),p.getTimeStampLong(), p.getTemp().toString());
-                        })
-                .match(GetTemperature.class, p -> {
-                    LocalDateTime tempTime = LocalDateTime.now();
-                    Long tempEpochTime = tempTime.atZone(ZoneId.systemDefault()).toEpochSecond();
-                    client.zrangebyscore(p.sensorID.toString(), tempEpochTime-60, tempEpochTime);
-
-                })
-                .matchEquals("latest", p -> {
-                    switch (temps.size()) {
-                        case 0:
-                            getSender().tell(-1L,getSelf());
-                            break;
-                        default:
-                            getSender().tell(temps.get(temps.size()-1),getSelf());
-                            break;
-                    }
-                })
-                .build();
+            .match(Long.class, tmp ->{
+                temps.add(tmp);
+            })
+            .match(RecieveTemperature.class, p -> {
+                    client.zadd(p.getSensorID().toString(),p.getTimeStampLong(), p.getTemp().toString());
+                    })
+            .match(GetTemperature.class, p -> {
+                LocalDateTime tempTime = LocalDateTime.now();
+                Long tempEpochTime = tempTime.atZone(ZoneId.systemDefault()).toEpochSecond();
+                client.zrangebyscore(p.sensorID.toString(), tempEpochTime-60, tempEpochTime);
+            })
+            .matchEquals("latest", p -> {
+                switch (temps.size()) {
+                    case 0:
+                        getSender().tell(-1L,getSelf());
+                        break;
+                    default:
+                        getSender().tell(temps.get(temps.size()-1),getSelf());
+                        break;
+                }
+            })
+            .build();
     }
 
     public static final class RecieveTemperature{
