@@ -1,10 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>$Title$</title>
-    </head>
-    <body>
-$END$
-    </body>
-</html>
+@(page: String, isLoggedIn: Boolean, userInfo: UserInfo, loginForm: Form[views.formdata.LoginFormData])
+
+@import bootstrap3._
+
+@Main(page, isLoggedIn, userInfo) {
+    <div class="container">
+    @loginform(routes.Application.postLogin(), loginForm("email"), loginForm("password"))
+    </div>
+}

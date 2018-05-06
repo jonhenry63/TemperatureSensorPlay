@@ -3,4 +3,12 @@
 # ~~~~
 
 GET     /temps/latest               controllers.TemperatureController.readTemperature
-POST    /temps/               controllers.TemperatureController.writeTemperature
+POST    /temps/                     controllers.TemperatureController.writeTemperature
+GET     /                           controllers.Application.index()
+GET     /login                      controllers.Application.login()
+POST    /login                      controllers.Application.postLogin()
+GET     /profile                    controllers.Application.profile()
+GET     /logout                     controllers.Application.logout()
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.at(path="/public", file)

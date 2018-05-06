@@ -58,10 +58,15 @@ public class TemperatureController extends Controller {
      * a path of <code>/message</code>.
      */
     public Result writeTemperature(){
-        JsonNode requestBody = request().body().asJson();
-        long timeNow = Instant.now().toEpochMilli();
-        tempActor.tell(new TemperatureActor.WriteTemperature(requestBody.path("sensorId").asLong(),(float)requestBody.path("reading").asDouble(), timeNow), tempActor);
+        TemperatureActor.WriteTemperature writeObject = parseWriteObject(request().body().asJson());
+        tempActor.tell(writeObject, tempActor);
         return ok("ok i did it");
+    }
+
+    private TemperatureActor.WriteTemperature parseWriteObject(JsonNode json) {
+        float temperature = json.at("/reading").floatValue();
+        long sensorId = json.at("/sensorId").longValue();
+        return new TemperatureActor.WriteTemperature(sensorId, temperature, Instant.now().toEpochMilli());
     }
 
     public Result readTemperature() {

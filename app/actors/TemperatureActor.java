@@ -29,7 +29,6 @@ public class TemperatureActor extends AbstractActor {
     private TemperatureReading getLatestTemperature(long sensorId) {
         String sensorIdString = String.valueOf(sensorId);
         int latestReadingIndex = client.zcard(sensorIdString).intValue() - 1;
-
         Tuple latestReading = client
             .zrangeWithScores(sensorIdString, latestReadingIndex, latestReadingIndex)
             .iterator().next();
