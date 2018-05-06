@@ -1,6 +1,5 @@
 package controllers;
 
-import play.api.data.Form;
 import play.data.Form;
 import play.mvc.Controller;
 import play.mvc.Result;
