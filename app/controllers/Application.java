@@ -1,6 +1,7 @@
 package controllers;
 
 import play.data.Form;
+import play.data.FormFactory;
 import play.mvc.Controller;
 import play.mvc.Result;
 import views.html.Index;
@@ -9,16 +10,27 @@ import views.html.Login;
 import views.formdata.LoginFormData;
 import play.mvc.Security;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 /**
  * Implements the controllers for this application.
  */
+@Singleton
 public class Application extends Controller {
+
+    private final Form<LoginFormData> form;
+
+    @Inject
+    public Application(FormFactory formFactory) {
+        form = formFactory.form(LoginFormData.class);
+    }
 
     /**
      * Provides the Index page.
      * @return The Index page.
      */
-    public static Result index() {
+    public Result index() {
         return ok(Index.render("Home", Secured.isLoggedIn(ctx()), Secured.getUserInfo(ctx())));
     }
 
@@ -26,9 +38,8 @@ public class Application extends Controller {
      * Provides the Login page (only to unauthenticated users).
      * @return The Login page.
      */
-    public static Result login() {
-        Form<LoginFormData> formData = Form.form(LoginFormData.class);
-        return ok(Login.render("Login", Secured.isLoggedIn(ctx()), Secured.getUserInfo(ctx()), formData));
+    public Result login() {
+        return ok(Login.render("Login", Secured.isLoggedIn(ctx()), Secured.getUserInfo(ctx()), form));
     }
 
     /**
@@ -39,10 +50,10 @@ public class Application extends Controller {
      * If errors not found, render the page with the good data.
      * @return The index page with the results of validation.
      */
-    public static Result postLogin() {
+    public Result postLogin() {
 
         // Get the submitted form data from the request object, and run validation.
-        Form<LoginFormData> formData = Form.form(LoginFormData.class).bindFromRequest();
+        Form<LoginFormData> formData = form.bindFromRequest();
 
         if (formData.hasErrors()) {
             flash("error", "Login credentials not valid.");
@@ -61,7 +72,7 @@ public class Application extends Controller {
      * @return A redirect to the Index page.
      */
     @Security.Authenticated(Secured.class)
-    public static Result logout() {
+    public Result logout() {
         session().clear();
         return redirect(routes.Application.index());
     }
@@ -71,7 +82,7 @@ public class Application extends Controller {
      * @return The Profile page.
      */
     @Security.Authenticated(Secured.class)
-    public static Result profile() {
+    public Result profile() {
         return ok(Profile.render("Profile", Secured.isLoggedIn(ctx()), Secured.getUserInfo(ctx())));
     }
 }
