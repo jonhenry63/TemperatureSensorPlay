@@ -55,4 +55,5 @@ public class UserInfoDB {
                 &&
                 getUser(email).getPassword().equals(password));
     }
+
 }

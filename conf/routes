@@ -7,7 +7,9 @@ POST    /temps/                     controllers.TemperatureController.writeTempe
 GET     /                           controllers.Application.index()
 GET     /login                      controllers.Application.login()
 POST    /login                      controllers.Application.postLogin()
-GET     /profile                    controllers.Application.profile()
+GET     /register                   controllers.Application.register()
+POST    /register                   controllers.Application.postRegister()
+GET     /dashboard                  controllers.Application.dashboard()
 GET     /logout                     controllers.Application.logout()
 
 # Map static resources from the /public folder to the /assets URL path
